@@ -1,0 +1,22 @@
+{
+  "name": "wasmsuperglue",
+  "version": "1.0.0",
+  "description": "A minimal JavaScript-WebAssembly interface.",
+  "main": "index.html",
+  "keywords": [
+    "javascript",
+    "wasm",
+    "webassembly",
+    "bones",
+    "dry",
+    "skeleton",
+    "basic",
+    "framework",
+    "emcc",
+    "emscripten",
+    "cpp",
+    "glue"
+  ],
+  "author": "GirkovArpa",
+  "license": "MIT"
+}
