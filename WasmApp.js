@@ -13,11 +13,13 @@ export default class WasmApp {
 
   #memory;
   #usedMemory = 0;
-  #availableMemory = BYTES_PER_PAGE;
+  #availableMemory;
   #functions;
 
   #minPages;
   #maxPages;
+
+  #arrays = {};
 
   constructor(filename, minPages, maxPages) {
     this.#filename = filename;
@@ -27,49 +29,80 @@ export default class WasmApp {
 
   async init() {
     ({ functions: this.#functions, memory: this.#memory, minPages: this.#minPages, maxPages: this.#maxPages } = await this.#wasmLoader.loadWasm(this.#filename, this.#minPages, this.#maxPages));
+    this.#availableMemory = (this.#minPages || 1) * BYTES_PER_PAGE;
   }
 
   get functions() {
     return this.#functions;
   }
 
-  #manageMemory = memoryToBeUsed => {
-    if (!this.#minPages && !this.#maxPages) { return }
-    this.#usedMemory += memoryToBeUsed;
-    while (this.#usedMemory > this.#availableMemory) {
-      console.warn('Adding page to wasm app memory. All its arrays will be invalidated.');
-      this.#memory.grow(1);
-      this.#availableMemory += BYTES_PER_PAGE;
-    }
+  get arrays() {
+    return this.#arrays;
   }
 
   newArray(length, type) {
     let array;
+    let memoryToBeUsed;
     switch (type) {
       case 'i32':
-        const memoryToBeUsed = length * WasmInt32Array.BYTES_PER_ELEMENT;
+        memoryToBeUsed = length * WasmInt32Array.BYTES_PER_ELEMENT;
         this.#manageMemory(memoryToBeUsed);
         array = new WasmInt32Array(this.#memory.buffer, this.#usedMemory - memoryToBeUsed, length);
         return array;
         break;
       case 'i64':
-        array = new WasmInt64Array(this.#memory.buffer, this.#usedMemory, length);
-        this.#usedMemory += (length * WasmInt64Array.BYTES_PER_ELEMENT);
+        throw ('JavaScript does not yet support i64!');
+        memoryToBeUsed = length * WasmInt64Array.BYTES_PER_ELEMENT;
+        this.#manageMemory(memoryToBeUsed);
+        array = new WasmInt64Array(this.#memory.buffer, this.#usedMemory - memoryToBeUsed, length);
         return array;
         break;
       case 'f32':
-        array = new WasmFloat32Array(this.#memory.buffer, this.#usedMemory, length);
-        this.#usedMemory += (length * WasmInt32Array.BYTES_PER_ELEMENT);
+        memoryToBeUsed = length * WasmFloat32Array.BYTES_PER_ELEMENT;
+        this.#manageMemory(memoryToBeUsed);
+        array = new WasmFloat32Array(this.#memory.buffer, this.#usedMemory - memoryToBeUsed, length);
         return array;
         break;
       case 'f64':
-        array = new WasmFloat64Array(this.#memory.buffer, this.#usedMemory, length);
-        this.#usedMemory += (length * WasmFloat64Array.BYTES_PER_ELEMENT);
+        memoryToBeUsed = length * WasmFloat64Array.BYTES_PER_ELEMENT;
+        this.#manageMemory(memoryToBeUsed);
+        array = new WasmFloat64Array(this.#memory.buffer, this.#usedMemory - memoryToBeUsed, length);
         return array;
         break;
       default:
-        throw new Error(`"${type}" is not a valid array type.`);
+        throw (`<<${type}>> is not a valid array type.`);
         break;
+    }
+  }
+
+  #refreshArrays = () => {
+    for (const [key, array] of Object.entries(this.#arrays)) {
+      array.WARNING = 'This is an expired reference to the actual array, which must now be accessed via the <<arrays>> property of the associated wasm app.';
+      switch (array.constructor.name) {
+        case 'WasmInt32Array':
+          this.#arrays[key] = new WasmInt32Array(this.#memory.buffer, array.bufferIndex, array.length);
+          break;
+        case 'WasmInt64Array':
+          this.#arrays[key] = new WasmInt64Array(this.#memory.buffer, array.bufferIndex, array.length);
+          break;
+        case 'WasmFloat32Array':
+          this.#arrays[key] = new WasmFloat32Array(this.#memory.buffer, array.bufferIndex, array.length);
+          break;
+        case 'WasmFloat64Array':
+          this.#arrays[key] = new WasmFloat64Array(this.#memory.buffer, array.bufferIndex, array.length);
+          break;
+      }
+    }
+  }
+
+  #manageMemory = memoryToBeUsed => {
+    this.#usedMemory += memoryToBeUsed;
+    if (!this.#minPages) { return }
+    while (this.#usedMemory > this.#availableMemory) {
+      console.warn(`Need ${this.#usedMemory.toLocaleString()} bytes but only ${this.#availableMemory.toLocaleString()} are available.  Growing ${BYTES_PER_PAGE.toLocaleString()} bytes.`);
+      this.#memory.grow(1);
+      this.#availableMemory += BYTES_PER_PAGE;
+      this.#refreshArrays();
     }
   }
 
