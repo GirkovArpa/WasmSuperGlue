@@ -3,26 +3,17 @@
 import WasmApp from './WasmApp.js';
 
 (async () => {
-  const app = new WasmApp('app.wasm', 1, 4);
+  const app = new WasmApp('app.wasm');
   await app.init();
 
-  const BYTES_PER_PAGE = 65_536;
+  const myNumber = app.functions.f64myCustomFunction(100);
+  console.log(myNumber); // 200.75075075075074
 
-  console.log(app);
+  app.arrays.myArray = app.newArray(100, 'i32'); // Arrays should always be declared and accessed at the .arrays property!
+  console.log(app.arrays.myArray); // WasmInt32Array(100) [0, 0, 0, 97 more items...]
+  app.functions.i32Fill(app.arrays.myArray.pointer, app.arrays.myArray.length, 1337);
+  console.log(app.arrays.myArray); // WasmInt32Array(100) [1337, 1337, 1337, 97 more items ...]
 
-  app.arrays.yeet = app.newArray((65_536 / 4), 'i32');
-  app.functions.i32Fill(app.arrays.yeet.pointer, app.arrays.yeet.length, 666);
-  console.log(app.arrays.yeet);
-
-  app.arrays.yeet2 = app.newArray((65_536 / 4), 'i32');
-  app.functions.i32Fill(app.arrays.yeet2.pointer, app.arrays.yeet2.length, 1337);
-  console.log(app.arrays.yeet2);
-
-  app.arrays.yeet3 = app.newArray((65_536 / 4), 'f32');
-  app.functions.f32Fill(app.arrays.yeet3.pointer, app.arrays.yeet3.length, 123.1);
-  console.log(app.arrays.yeet3);
-
-  app.arrays.yeet4 = app.newArray((65_536 / 8), 'f64');
-  app.functions.f64Fill(app.arrays.yeet4.pointer, app.arrays.yeet4.length, 666.1337);
-  console.log(app.arrays.yeet4);
+  app.arrays.myArray[12] = 34; // Remember to access arrays at the .arrays property!
+  console.log(app.arrays.myArray[12]); // 34
 })();

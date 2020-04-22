@@ -2,11 +2,13 @@
 
 export { WasmInt32Array, WasmInt64Array, WasmFloat32Array, WasmFloat64Array };
 
-const i32_MAX = 2_147_483_647;
-const f32_MAX = 2_147_483_647;
-const i64_MAX = 9_223_372_036_854_775_807n;
-const f64_MAX = 9_007_199_254_740_993;
-
+/** 
+ * Extends Int32Array in order to preserve the original length and buffer index when the buffer becomes detached during a memory.grow() operation.
+ * Also allows for the more intuitive 'pointer' alias of 'byteOffset'.
+ * @param {buffer} buffer - The raw Wasm memory.
+ * @param {number} bufferIndex - The location in the Wasm memory, in bytes, where this array begins.
+ * @param {number} length - The length of this array.
+ */
 class WasmInt32Array extends Int32Array {
   #length;
   #bufferIndex;
@@ -26,6 +28,13 @@ class WasmInt32Array extends Int32Array {
   }
 }
 
+/** 
+ * Extends BigInt64Array in order to preserve the original length and buffer index when the buffer becomes detached during a memory.grow() operation.
+ * Also allows for the more intuitive 'pointer' alias of 'byteOffset'.
+ * @param {buffer} buffer - The raw Wasm memory.
+ * @param {number} bufferIndex - The location in the Wasm memory, in bytes, where this array begins.
+ * @param {number} length - The length of this array.
+ */
 class WasmInt64Array extends BigInt64Array {
   #length;
   #bufferIndex;
@@ -45,6 +54,13 @@ class WasmInt64Array extends BigInt64Array {
   }
 }
 
+/** 
+ * Extends Float32Array in order to preserve the original length and buffer index when the buffer becomes detached during a memory.grow() operation.
+ * Also allows for the more intuitive 'pointer' alias of 'byteOffset'.
+ * @param {buffer} buffer - The raw Wasm memory.
+ * @param {number} bufferIndex - The location in the Wasm memory, in bytes, where this array begins.
+ * @param {number} length - The length of this array.
+ */
 class WasmFloat32Array extends Float32Array {
   #length;
   #bufferIndex;
@@ -64,6 +80,13 @@ class WasmFloat32Array extends Float32Array {
   }
 }
 
+/** 
+ * Extends Float64Array in order to preserve the original length and buffer index when the buffer becomes detached during a memory.grow() operation.
+ * Also allows for the more intuitive 'pointer' alias of 'byteOffset'.
+ * @param {buffer} buffer - The raw Wasm memory.
+ * @param {number} bufferIndex - The location in the Wasm memory, in bytes, where this array begins.
+ * @param {number} length - The length of this array.
+ */
 class WasmFloat64Array extends Float64Array {
   #length;
   #bufferIndex;
