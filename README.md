@@ -7,6 +7,7 @@ A minimal JavaScript-WebAssembly interface.
 First step:
 
 ```javascript
+// JavaScript
 const app = new WasmApp('app.wasm');
 await app.init();
 ```
@@ -14,16 +15,19 @@ await app.init();
 Create an array of 100 32-bit integers shared with both JavaScript and WebAssembly:
 
 ```javascript
+// JavaScript
 app.arrays.myArray = app.newArray(100, 'i32');
 ```
 
 Pass the array to your Wasm "i32Fill" function, which fills it with the number 1337:
 
 ```javascript
+// JavaScript
 app.functions.i32Fill(app.arrays.myArray.pointer, app.arrays.myArray.length, 1337);
 ```
 
 ```cpp
+// C++
 // define cute type aliases =)
 typedef long int i32;
 typedef long long int i64;
@@ -41,17 +45,20 @@ void i32Fill(i32 *array, int length, i32 value) {
 Set the first value of the same array to 2003, in JavaScript:
 
 ```javascript
+// JavaScript
 app.arrays.myArray[0] = 2003; // Always access your arrays this way, via the .arrays property
 ```
 
 Pass a number to Wasm to perform a custom compiled calculation and recieve the result:
 
 ```javascript
+// JavaScript
 const myNumber = app.functions.f64myCustomFunction(100);
 console.log(myNumber); // 200.75075075075074
 ```
 
 ```cpp
+// C++
 f64 f64myCustomFunction(f64 number) {
   return number * 1337 / 666;
 }
